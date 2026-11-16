@@ -2,6 +2,8 @@
 
 **Give Claude ears in Ableton Live.**
 
+Early release: tested against a Live simulator and synthetic audio. Real Ableton Live workflows have not yet been verified.
+
 MARA Bridge is an MCP server that connects Claude (the desktop app or Claude Code), Codex, Cursor, or any other MCP client to your Ableton Live set. Your agent can then measure every channel, look at spectra and spectrograms, compare your mix with reference tracks, and set volume, pan, EQ and compression itself.
 
 A model that only talks to Live's API sees track names and knob values. It changes a parameter and can't tell what happened. MARA Bridge adds measurement: a transparent tap at the end of every channel, the same analysis for reference files, and a recording of any passage when finer detail is needed. Every change is saved first and can be undone with one call.
