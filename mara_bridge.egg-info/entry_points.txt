@@ -1,2 +1,0 @@
-[console_scripts]
-mara-bridge = mara_bridge.server:main
