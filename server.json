@@ -1,14 +1,14 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.moritzlauper/mara-bridge",
-  "title": "MARA Bridge",
+  "name": "io.github.moritzlauper/mara-mcp",
+  "title": "MARA MCP",
   "description": "Measure and mix Ableton Live sets: reference comparison, spectra, masking, EQ and compression.",
-  "repository": {"url": "https://github.com/moritzlauper/mara-bridge", "source": "github"},
-  "version": "0.1.0",
+  "repository": {"url": "https://github.com/moritzlauper/mara-mcp", "source": "github"},
+  "version": "0.1.1",
   "packages": [{
     "registryType": "mcpb",
-    "identifier": "https://github.com/moritzlauper/mara-bridge/releases/download/v0.1.0/mara-bridge-0.1.0.mcpb",
-    "fileSha256": "50c49ed6124571ffc5605073ce0c2e3f23d7efecd602a61268884b279326914e",
+    "identifier": "https://github.com/moritzlauper/mara-mcp/releases/download/v0.1.1/mara-mcp-0.1.1.mcpb",
+    "fileSha256": "b43e448c4d9b9b44543ec7e34f61590617209bdf5369068ef7f78d0ac82292c4",
     "transport": {"type": "stdio"}
   }]
 }

@@ -1,6 +1,6 @@
-"""MARA Bridge: an MCP server that lets Claude Code, Codex or any MCP client hear and change an Ableton set.
+"""MARA MCP: an MCP server that lets Claude Code, Codex or any MCP client hear and change an Ableton set.
 
-    mara-bridge              stdio server, started by the MCP client, not by hand (see `mara-bridge --help`)
+    mara-mcp              stdio server, started by the MCP client, not by hand (see `mara-mcp --help`)
 
 The client drives the mix itself. The bridge gives it what a chat model cannot get from Live's API alone: the
 measured sound of every channel and of Main (loudness, peaks, tonal balance, stereo width, mono low end), which
@@ -996,7 +996,7 @@ class Server:
                 from . import __version__ as version
                 result = {"protocolVersion": asked if asked in PROTOCOL_VERSIONS else PROTOCOL_VERSIONS[0],
                           "capabilities": {"tools": {}},
-                          "serverInfo": {"name": "mara-bridge", "title": "MARA Bridge", "version": version},
+                          "serverInfo": {"name": "mara-mcp", "title": "MARA MCP", "version": version},
                           "instructions": INSTRUCTIONS}
             elif method == "ping":
                 result = {}
@@ -1039,7 +1039,7 @@ def serve(stdin=None, stdout=None, bridge: Bridge | None = None) -> None:
     # Stdout belongs to the protocol: a stray print anywhere in MARA would corrupt it, so prints go to stderr.
     real_stdout, sys.stdout = sys.stdout, sys.stderr
     server = Server(bridge or Bridge())
-    _log("MARA Bridge ready (MCP over stdio)")
+    _log("MARA MCP ready (MCP over stdio)")
     try:
         for line in stdin:
             line = line.strip()
@@ -1060,10 +1060,10 @@ def serve(stdin=None, stdout=None, bridge: Bridge | None = None) -> None:
 
 
 def main(argv=None) -> None:
-    """`mara-bridge` serves MCP on stdio; `setup`, `check` and `config` are for people."""
+    """`mara-mcp` serves MCP on stdio; `setup`, `check` and `config` are for people."""
     import argparse
 
-    p = argparse.ArgumentParser(prog="mara-bridge", description="MARA Bridge: let Claude Code, Codex or any MCP "
+    p = argparse.ArgumentParser(prog="mara-mcp", description="MARA MCP: let Claude Code, Codex or any MCP "
                                 "client hear and change your Ableton Live set.")
     sub = p.add_subparsers(dest="cmd")
     s = sub.add_parser("setup", help="install the Live connection (remote script and measurement tap)")

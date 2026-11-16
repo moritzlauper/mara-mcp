@@ -1,12 +1,12 @@
-# MARA Bridge
+# MARA MCP
 
 **Give Claude ears in Ableton Live.**
 
 Early release: tested against a Live simulator and synthetic audio. Real Ableton Live workflows have not yet been verified.
 
-MARA Bridge is an MCP server that connects Claude (the desktop app or Claude Code), Codex, Cursor, or any other MCP client to your Ableton Live set. Your agent can then measure every channel, look at spectra and spectrograms, compare your mix with reference tracks, and set volume, pan, EQ and compression itself.
+MARA MCP is an MCP server that connects Claude (the desktop app or Claude Code), Codex, Cursor, or any other MCP client to your Ableton Live set. Your agent can then measure every channel, look at spectra and spectrograms, compare your mix with reference tracks, and set volume, pan, EQ and compression itself.
 
-A model that only talks to Live's API sees track names and knob values. It changes a parameter and can't tell what happened. MARA Bridge adds measurement: a transparent tap at the end of every channel, the same analysis for reference files, and a recording of any passage when finer detail is needed. Every change is saved first and can be undone with one call.
+A model that only talks to Live's API sees track names and knob values. It changes a parameter and can't tell what happened. MARA MCP adds measurement: a transparent tap at the end of every channel, the same analysis for reference files, and a recording of any passage when finer detail is needed. Every change is saved first and can be undone with one call.
 
 > "Listen to the drop at bar 33. What's muddy?"
 > "Here's my reference: ~/Music/refs/song.wav. Make it as loud as this without squashing the drums."
@@ -50,23 +50,23 @@ A model that only talks to Live's API sees track names and knob values. It chang
 **1. Install the Live connection** (a control surface script and the measurement tap):
 
 ```bash
-uvx --python 3.12 --from git+https://github.com/moritzlauper/mara-bridge mara-bridge setup
+uvx --python 3.12 --from git+https://github.com/moritzlauper/mara-mcp mara-mcp setup
 ```
 
 If your User Library is not in the default place, add `--library "/path/to/User Library"`.
 
 **2. In Live:** restart it. In **Settings → Link/Tempo/MIDI → Control Surface**, choose **MixMatch** (**MARA** in newer versions) and set Input and Output to **None**.
 
-**3. Register the bridge with your agent.** `mara-bridge config` prints these lines for you.
+**3. Register the bridge with your agent.** `mara-mcp config` prints these lines for you.
 
 Claude desktop app (Settings → Developer → Edit Config, then restart Claude):
 
 ```json
 {
   "mcpServers": {
-    "mara-bridge": {
+    "mara-mcp": {
       "command": "uvx",
-      "args": ["--python", "3.12", "--from", "git+https://github.com/moritzlauper/mara-bridge", "mara-bridge"]
+      "args": ["--python", "3.12", "--from", "git+https://github.com/moritzlauper/mara-mcp", "mara-mcp"]
     }
   }
 }
@@ -77,19 +77,19 @@ If Claude can't find `uvx`, use its full path (`which uvx`, usually `~/.local/bi
 Claude Code:
 
 ```bash
-claude mcp add mara-bridge -- uvx --python 3.12 --from git+https://github.com/moritzlauper/mara-bridge mara-bridge
+claude mcp add mara-mcp -- uvx --python 3.12 --from git+https://github.com/moritzlauper/mara-mcp mara-mcp
 ```
 
 Codex (`~/.codex/config.toml`):
 
 ```toml
-[mcp_servers.mara-bridge]
+[mcp_servers.mara-mcp]
 command = "uvx"
-args = ["--python", "3.12", "--from", "git+https://github.com/moritzlauper/mara-bridge", "mara-bridge"]
+args = ["--python", "3.12", "--from", "git+https://github.com/moritzlauper/mara-mcp", "mara-mcp"]
 tool_timeout_sec = 120
 ```
 
-**4. Open your set and say hello.** Ask the agent to add the measurement taps; it calls `add_taps` once per set. `mara-bridge check` tests the connection from a terminal.
+**4. Open your set and say hello.** Ask the agent to add the measurement taps; it calls `add_taps` once per set. `mara-mcp check` tests the connection from a terminal.
 
 The first start downloads the dependencies and can take a minute. If the [MARA app](https://github.com/moritzlauper/mara) is open, close it: the taps report to one program at a time.
 
@@ -130,13 +130,13 @@ A reference is a finished stereo master, so not everything in it can be measured
 
 ## How it relates to MARA
 
-[MARA](https://github.com/moritzlauper/mara) is a reference-guided mixing app that runs its own measured mix pass. MARA Bridge uses MARA's Live connection, taps and analysis, and leaves the decisions to your agent.
+[MARA](https://github.com/moritzlauper/mara) is a reference-guided mixing app that runs its own measured mix pass. MARA MCP uses MARA's Live connection, taps and analysis, and leaves the decisions to your agent.
 
 ## Development
 
 ```bash
-git clone https://github.com/moritzlauper/mara https://github.com/moritzlauper/mara-bridge
-cd mara-bridge
+git clone https://github.com/moritzlauper/mara https://github.com/moritzlauper/mara-mcp
+cd mara-mcp
 uv venv --python 3.12 .venv
 uv pip install --python .venv -e ../mara pytest
 uv pip install --python .venv --no-deps -e .

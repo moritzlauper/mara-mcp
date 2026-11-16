@@ -50,7 +50,7 @@ def test_protocol_handshake_and_tool_list(tmp_path):
     server = br.Server(_bridge(tmp_path)[0])
     init = _rpc(server, "initialize", {"protocolVersion": "2025-03-26", "capabilities": {}})["result"]
     assert init["protocolVersion"] == "2025-03-26"
-    assert init["serverInfo"]["name"] == "mara-bridge"
+    assert init["serverInfo"]["name"] == "mara-mcp"
     assert server.handle({"jsonrpc": "2.0", "method": "notifications/initialized"}) is None
     names = {t["name"] for t in _rpc(server, "tools/list")["result"]["tools"]}
     assert {"listen", "set_parameters", "record_and_compare", "analyze_audio", "restore"} <= names

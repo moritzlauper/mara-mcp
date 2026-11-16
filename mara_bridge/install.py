@@ -1,4 +1,4 @@
-"""`mara-bridge setup`, `check` and `config`: the parts a person runs in a terminal."""
+"""`mara-mcp setup`, `check` and `config`: the parts a person runs in a terminal."""
 from __future__ import annotations
 
 import json
@@ -12,7 +12,7 @@ from pathlib import Path
 
 from . import MARA_REPO, SURFACE, TAP
 
-UVX = "uvx --python 3.12 --from git+https://github.com/moritzlauper/mara-bridge mara-bridge"
+UVX = "uvx --python 3.12 --from git+https://github.com/moritzlauper/mara-mcp mara-mcp"
 
 
 def _mara_source() -> tuple[Path | None, str | None]:
@@ -22,7 +22,7 @@ def _mara_source() -> tuple[Path | None, str | None]:
     try:
         direct = json.loads(metadata.distribution("mixmatch").read_text("direct_url.json") or "{}")
     except metadata.PackageNotFoundError:
-        sys.exit("The MARA package (mixmatch) is not installed. Install mara-bridge with pip or uvx, see README.")
+        sys.exit("The MARA package (mixmatch) is not installed. Install mara-mcp with pip or uvx, see README.")
     url = direct.get("url", "")
     if url.startswith("file://"):
         root = Path(url[len("file://"):])
@@ -77,8 +77,8 @@ def setup(library: str | None = None) -> None:
     print(f"Installed into {result['library']}.\n")
     print("Next:")
     print(f"  1. Restart Live. Settings → Link/Tempo/MIDI → Control Surface: choose «{SURFACE}», Input and Output «None».")
-    print("  2. Register the bridge in your agent:  mara-bridge config")
-    print("  3. Open your set and ask the agent to add the measurement taps (or: mara-bridge check).")
+    print("  2. Register the bridge in your agent:  mara-mcp config")
+    print("  3. Open your set and ask the agent to add the measurement taps (or: mara-mcp check).")
 
 
 def check() -> None:
@@ -89,7 +89,7 @@ def check() -> None:
         live.request("ping")
     except OSError:
         sys.exit(f"✗ Live is not reachable on port 9877. Is Live open, and «{SURFACE}» selected as a control surface? "
-                 "Run `mara-bridge setup` first if you have not.")
+                 "Run `mara-mcp setup` first if you have not.")
     state = live.get_set()
     tracks = state["tracks"]
     taps = [t for t in tracks if any(d["name"] == TAP for d in t["devices"])]
@@ -108,14 +108,14 @@ def check() -> None:
 
 
 def config() -> None:
-    exe = shutil.which("mara-bridge") or sys.argv[0]
+    exe = shutil.which("mara-mcp") or sys.argv[0]
     print("Claude Code:\n")
-    print(f"  claude mcp add mara-bridge -- {UVX}\n")
+    print(f"  claude mcp add mara-mcp -- {UVX}\n")
     print("Codex (~/.codex/config.toml):\n")
     command, *args = UVX.split()
-    print(f'  [mcp_servers.mara-bridge]\n  command = "{command}"\n  args = {json.dumps(args)}\n')
+    print(f'  [mcp_servers.mara-mcp]\n  command = "{command}"\n  args = {json.dumps(args)}\n')
     print("Claude Desktop, Cursor, Windsurf and others (mcpServers in their JSON settings):\n")
-    print("  " + json.dumps({"mcpServers": {"mara-bridge": {"command": command, "args": args}}}, indent=2)
+    print("  " + json.dumps({"mcpServers": {"mara-mcp": {"command": command, "args": args}}}, indent=2)
           .replace("\n", "\n  ") + "\n")
     if exe and Path(exe).exists() and ".cache/uv" not in exe and "uv/archive" not in exe:
         print(f"Using this installation instead of uvx: replace the command with {Path(exe).resolve()}")

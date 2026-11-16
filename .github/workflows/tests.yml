@@ -6,18 +6,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          path: mara-bridge
+          path: mara-mcp
       - uses: actions/checkout@v4
         with:
           repository: moritzlauper/mara
+          ref: c1b267635d26f7efa480fed868c8d13c9d7b380e
           path: mara
       - uses: astral-sh/setup-uv@v5
       - name: Install
-        working-directory: mara-bridge
+        working-directory: mara-mcp
         run: |
           uv venv --python 3.12 .venv
           uv pip install --python .venv -e ../mara pytest
           uv pip install --python .venv --no-deps -e .
       - name: Test
-        working-directory: mara-bridge
+        working-directory: mara-mcp
         run: .venv/bin/python -m pytest -q

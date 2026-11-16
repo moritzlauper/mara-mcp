@@ -3,8 +3,8 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mara-bridge"
-version = "0.1.0"
+name = "mara-mcp"
+version = "0.1.1"
 description = "Let Claude, Codex or any MCP client hear and mix your Ableton Live set: per-channel metering, spectrum, references, EQ and compression."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,10 +17,10 @@ dependencies = [
 dev = ["pytest"]
 
 [project.scripts]
-mara-bridge = "mara_bridge.server:main"
+mara-mcp = "mara_bridge.server:main"
 
 [project.urls]
-Homepage = "https://github.com/moritzlauper/mara-bridge"
+Homepage = "https://github.com/moritzlauper/mara-mcp"
 MARA = "https://github.com/moritzlauper/mara"
 
 [tool.setuptools]
