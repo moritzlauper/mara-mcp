@@ -1,0 +1,23 @@
+name: tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: mara-bridge
+      - uses: actions/checkout@v4
+        with:
+          repository: moritzlauper/mara
+          path: mara
+      - uses: astral-sh/setup-uv@v5
+      - name: Install
+        working-directory: mara-bridge
+        run: |
+          uv venv --python 3.12 .venv
+          uv pip install --python .venv -e ../mara pytest
+          uv pip install --python .venv --no-deps -e .
+      - name: Test
+        working-directory: mara-bridge
+        run: .venv/bin/python -m pytest -q

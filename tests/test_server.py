@@ -136,3 +136,97 @@ def test_serve_keeps_stdout_for_the_protocol(tmp_path, capsys):
     replies = [json.loads(line) for line in out.getvalue().splitlines()]
     assert [r.get("id") for r in replies] == [1, None, 2]
     assert replies[1]["error"]["code"] == -32700
+
+
+def test_compare_elements_groups_channels_by_role(tmp_path):
+    bridge, _ = _bridge(tmp_path)
+    ref = _song(tmp_path / "ref.wav", f0=48, gain=0.95)
+    out = bridge.compare_elements(reference=ref, seconds=4)
+    el = out["elements"]
+    assert [c["track"] for c in el["kick"]["your_channels"]] == ["Kick"]
+    assert [c["track"] for c in el["vocals"]["your_channels"]] == ["Lead Vox"]
+    assert el["kick"]["yours"]["level_vs_mix_db"] < 0
+    assert el["kick"]["references"]["ref.wav"]["sound"]["fundamental_hz"] == pytest.approx(48, abs=3)
+    assert el["vocals"]["references"]["ref.wav"]["sound"] is None      # not separable in a stereo master
+    out = bridge.compare_elements(reference=ref, seconds=4, assign={"Pad": "none", "Lead Vox": "music"})
+    assert out["elements"]["vocals"]["your_channels"] is None
+    assert {c["track"] for c in out["elements"]["music"]["your_channels"]} == {"Lead Vox"}
+
+
+def test_record_a_solo_track_against_the_reference(tmp_path, monkeypatch):
+    from mixmatch import autoref
+
+    bridge, _ = _bridge(tmp_path)
+    mine = _song(tmp_path / "mykick.wav", f0=60, decay=0.08, bass=0.0)
+    monkeypatch.setattr(autoref, "capture_begin", lambda live, beats, source, start=None: 7)
+    monkeypatch.setattr(autoref, "capture_end", lambda live, track, timeout=20: mine)
+    out = bridge.record_and_compare(start_beat=0, bars=4, reference=_song(tmp_path / "ref.wav", f0=48, bass=0.0),
+                                    track="Kick")
+    assert out["element"] == "kick"
+    diff = out["references"]["ref.wav"]["difference"]
+    assert diff["fundamental_hz"] > 5            # my kick sits higher than the reference's
+    assert diff["decay_ms_to_-10db"] < 0          # and is shorter
+
+
+def test_listen_reports_rms_and_crest(tmp_path):
+    bridge, _ = _bridge(tmp_path)
+    heard = bridge.listen(seconds=3)
+    assert heard["main"]["rms_dbfs"] < 0 and heard["main"]["crest_db"] > 0
+    kick = next(t for t in heard["tracks"] if t["name"] == "Kick")
+    assert {"rms_dbfs", "crest_db", "plr_db"} <= set(kick)
+
+
+def test_spectrum_and_spectrogram_with_pictures(tmp_path):
+    bridge, _ = _bridge(tmp_path)
+    server = br.Server(bridge)
+    out = _rpc(server, "tools/call", {"name": "spectrum", "arguments": {"tracks": ["Main", "Bass"], "seconds": 3}})
+    content = out["result"]["content"]
+    data = json.loads(content[0]["text"])
+    assert set(data["spectra"]) == {"Main", "Bass"}
+    assert data["spectra"]["Bass"]["columns"] == ["hz", "avg_db", "max_db"]
+    assert content[1]["type"] == "image" and content[1]["mimeType"] == "image/png"
+    import base64
+    assert base64.b64decode(content[1]["data"])[:8] == b"\x89PNG\r\n\x1a\n"
+
+    ref = _song(tmp_path / "ref.wav")
+    fine = bridge.spectrum(path=ref, resolution=24, compare_to=ref, image=False)
+    diff = fine["spectra"]["difference"]["points"]
+    assert all(abs(d) < 0.01 for _, d in diff)                     # a file against itself
+    assert len(fine["spectra"]["ref.wav"]["points"]) > 200          # 1/24 octave over ten octaves
+
+    gram = bridge.spectrogram(track="Kick", seconds=3)
+    assert gram["table"]["rows"] and gram["_images"][0][:4] == b"\x89PNG"
+
+
+def test_spectrum_finds_a_resonance(tmp_path):
+    from mara_bridge import spectrum as sp
+
+    sr, n = 44100, 44100 * 4
+    rng = np.random.default_rng(0)
+    x = rng.standard_normal(n) * 0.05 + 0.3 * np.sin(2 * np.pi * 440 * np.arange(n) / sr)
+    path = tmp_path / "tone.wav"
+    sf.write(path, np.stack([x, x], 1).astype(np.float32), sr)
+    peaks = sp.from_audio(str(path), 12)["peaks"]
+    assert peaks and abs(peaks[0]["hz"] - 440) < 30
+
+
+def test_mixer_eq_and_compressor(tmp_path):
+    bridge, song = _bridge(tmp_path)
+    bridge.mixer("Bass", volume_db=-4, pan=-10)
+    assert song.tracks[1].mixer_device.volume.str_for_value(song.tracks[1].mixer_device.volume.value).startswith("-4")
+    out = bridge.eq("Bass", [{"freq_hz": 250, "gain_db": -3, "q": 1.2, "type": "bell"},
+                             {"freq_hz": 30, "type": "low_cut"}])
+    assert not out["errors"]
+    eq = next(d for d in song.tracks[1].devices if d.class_name == "Eq8")
+    bands = {n: eq.p(f"{n} Filter Type A").str_for_value(eq.p(f"{n} Filter Type A").value) for n in (1, 2)}
+    assert bands == {1: "Bell", 2: "Low Cut 48"}
+    assert eq.p("1 Gain A").value == pytest.approx(-3, abs=0.1)
+    # The same band is adjusted, not a new one used.
+    bridge.eq("Bass", [{"freq_hz": 260, "gain_db": -5, "type": "bell"}])
+    assert eq.p("1 Gain A").value == pytest.approx(-5, abs=0.1) and eq.p("3 Filter On A").value == 0
+
+    bridge.compressor("Bass", threshold_db=-24, ratio=4, attack_ms=10, release_ms=120, model="rms")
+    comp = next(d for d in song.tracks[1].devices if d.class_name == "Compressor2")
+    assert comp.p("Ratio").value == pytest.approx(4, abs=0.1)
+    assert comp.p("Model").value == 1
+    assert "Threshold" in bridge.compressor("Bass")["settings"]

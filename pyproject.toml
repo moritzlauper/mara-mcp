@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mara-bridge"
 version = "0.1.0"
-description = "Let Claude Code, Codex or any MCP client hear and change your Ableton Live set: per-channel measurement, reference comparison, stems."
+description = "Let Claude, Codex or any MCP client hear and mix your Ableton Live set: per-channel metering, spectrum, references, EQ and compression."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -14,7 +14,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-stems = ["demucs>=4.0.1", "torch", "torchaudio"]   # separate reference songs into drums, bass, vocals, other
 dev = ["pytest"]
 
 [project.scripts]

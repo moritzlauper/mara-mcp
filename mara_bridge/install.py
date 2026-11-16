@@ -10,7 +10,7 @@ import urllib.request
 from contextlib import contextmanager
 from pathlib import Path
 
-from . import MARA_REPO
+from . import MARA_REPO, SURFACE, TAP
 
 UVX = "uvx --python 3.12 --from git+https://github.com/moritzlauper/mara-bridge mara-bridge"
 
@@ -26,18 +26,18 @@ def _mara_source() -> tuple[Path | None, str | None]:
     url = direct.get("url", "")
     if url.startswith("file://"):
         root = Path(url[len("file://"):])
-        if (root / "remote_script/MixMatch").is_dir():
+        if (root / f"remote_script/{SURFACE}").is_dir():
             return root, None
     import mixmatch
     root = Path(mixmatch.__file__).resolve().parent.parent
-    if (root / "remote_script/MixMatch").is_dir():
+    if (root / f"remote_script/{SURFACE}").is_dir():
         return root, None
     return None, direct.get("vcs_info", {}).get("commit_id") or "main"
 
 
 @contextmanager
 def _live_files():
-    """A folder with remote_script/MixMatch and device/ of the same MARA version as the Python code."""
+    """A folder with remote_script/<surface> and device/ of the same MARA version as the Python code."""
     root, commit = _mara_source()
     if root is not None:
         yield root
@@ -51,7 +51,7 @@ def _live_files():
         out = Path(tmp) / "mara"
         with tarfile.open(archive) as tar:
             wanted = [m for m in tar.getmembers() if m.isfile() and "/" in m.name
-                      and m.name.split("/", 1)[1].startswith(("remote_script/MixMatch/", "device/"))
+                      and m.name.split("/", 1)[1].startswith((f"remote_script/{SURFACE}/", "device/"))
                       and ".." not in m.name]
             for m in wanted:
                 target = out / m.name.split("/", 1)[1]
@@ -76,7 +76,7 @@ def setup(library: str | None = None) -> None:
             platforms.resources = original
     print(f"Installed into {result['library']}.\n")
     print("Next:")
-    print("  1. Restart Live. Settings → Link/Tempo/MIDI → Control Surface: choose «MixMatch», Input and Output «None».")
+    print(f"  1. Restart Live. Settings → Link/Tempo/MIDI → Control Surface: choose «{SURFACE}», Input and Output «None».")
     print("  2. Register the bridge in your agent:  mara-bridge config")
     print("  3. Open your set and ask the agent to add the measurement taps (or: mara-bridge check).")
 
@@ -88,11 +88,11 @@ def check() -> None:
         live = LiveClient().connect()
         live.request("ping")
     except OSError:
-        sys.exit("✗ Live is not reachable on port 9877. Is Live open, and «MixMatch» selected as a control surface? "
+        sys.exit(f"✗ Live is not reachable on port 9877. Is Live open, and «{SURFACE}» selected as a control surface? "
                  "Run `mara-bridge setup` first if you have not.")
     state = live.get_set()
     tracks = state["tracks"]
-    taps = [t for t in tracks if any(d["name"] == "MixMatch Tap" for d in t["devices"])]
+    taps = [t for t in tracks if any(d["name"] == TAP for d in t["devices"])]
     print(f"✓ Live: «{state.get('name') or 'unsaved set'}», {len(tracks)} tracks, {state.get('tempo')} BPM")
     print(f"{'✓' if len(taps) == len(tracks) else '•'} Taps on {len(taps)} of {len(tracks)} tracks"
           + ("" if taps else " (the agent adds them with add_taps)"))

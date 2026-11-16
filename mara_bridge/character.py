@@ -90,7 +90,8 @@ def density(mono: np.ndarray, sr: int) -> dict:
 
 
 # ── kick and bass ──────────────────────────────────────────────────────────
-def _onsets(low_env_db: np.ndarray) -> np.ndarray:
+def _onsets(low_env_db: np.ndarray, gap_s: float = MIN_GAP_S, fall_hops: int = 30) -> np.ndarray:
+    """Hits in a band envelope (10 ms hops): a sharp rise that peaks and falls again within `fall_hops`."""
     from scipy.signal import find_peaks
 
     if len(low_env_db) < 10:
@@ -98,14 +99,14 @@ def _onsets(low_env_db: np.ndarray) -> np.ndarray:
     rise = low_env_db - np.minimum.reduce([np.roll(low_env_db, k) for k in (1, 2, 3)])
     rise[:3] = 0
     floor = low_env_db.max() - 30
-    peaks, _ = find_peaks(rise, height=2.0, distance=int(MIN_GAP_S / HOP_S))
+    peaks, _ = find_peaks(rise, height=2.0, distance=max(1, int(gap_s / HOP_S)))
     peaks = peaks[low_env_db[np.minimum(peaks + 3, len(low_env_db) - 1)] > floor]
     if len(peaks) < 4:
         return peaks
     # A hit peaks and falls again; a sidechained bass coming back rises and stays.
     n = len(low_env_db)
     top = [o + int(np.argmax(low_env_db[o:o + 6])) for o in peaks]
-    falls = np.array([low_env_db[p:min(n, p + 30)].min() <= low_env_db[p] - 3.0 for p in top], dtype=bool)
+    falls = np.array([low_env_db[p:min(n, p + fall_hops)].min() <= low_env_db[p] - 3.0 for p in top], dtype=bool)
     peaks, top = peaks[falls], np.array(top)[falls]
     if len(peaks) < 4:
         return peaks
