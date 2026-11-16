@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mara-bridge"
+version = "0.1.0"
+description = "Let Claude Code, Codex or any MCP client hear and change your Ableton Live set: per-channel measurement, reference comparison, stems."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    # MARA: Live connection, measurement taps and analysis. Pinned to the commit this bridge is tested against.
+    "mixmatch @ git+https://github.com/moritzlauper/mara.git@c1b267635d26f7efa480fed868c8d13c9d7b380e",
+]
+
+[project.optional-dependencies]
+stems = ["demucs>=4.0.1", "torch", "torchaudio"]   # separate reference songs into drums, bass, vocals, other
+dev = ["pytest"]
+
+[project.scripts]
+mara-bridge = "mara_bridge.server:main"
+
+[project.urls]
+Homepage = "https://github.com/moritzlauper/mara-bridge"
+MARA = "https://github.com/moritzlauper/mara"
+
+[tool.setuptools]
+packages = ["mara_bridge"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

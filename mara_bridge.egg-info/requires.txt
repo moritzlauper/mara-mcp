@@ -1,0 +1,9 @@
+mixmatch @ git+https://github.com/moritzlauper/mara.git@c1b267635d26f7efa480fed868c8d13c9d7b380e
+
+[dev]
+pytest
+
+[stems]
+demucs>=4.0.1
+torch
+torchaudio

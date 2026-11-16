@@ -1,0 +1,13 @@
+pyproject.toml
+mara_bridge/__init__.py
+mara_bridge/__main__.py
+mara_bridge/character.py
+mara_bridge/install.py
+mara_bridge/server.py
+mara_bridge.egg-info/PKG-INFO
+mara_bridge.egg-info/SOURCES.txt
+mara_bridge.egg-info/dependency_links.txt
+mara_bridge.egg-info/entry_points.txt
+mara_bridge.egg-info/requires.txt
+mara_bridge.egg-info/top_level.txt
+tests/test_server.py
